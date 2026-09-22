@@ -24,7 +24,6 @@ st.markdown("""
         footer {visibility: hidden;}
         header {visibility: hidden;}
         
-        * --- 追加：右下のStreamlitバッジやステータスウィジェットを非表示にする --- */
         .stDeployButton {display: none;}
         [data-testid="stStatusWidget"] {visibility: hidden;}
         footer {visibility: hidden !important;}
@@ -47,7 +46,7 @@ st.markdown("""
             border: 1px solid #ced4da;
             border-bottom: none;
             opacity: 1 !important;
-        　　font-size: 1.2em !important; /* ← ここを追加（お好みで 1.2em〜1.3em に調整可能） */
+            font-size: 1.2em !important;
         }
         .stTabs [aria-selected="true"] {
             background-color: #ffffff !important;
@@ -142,7 +141,7 @@ def fetch_month_weather(lat, lon, year, month):
         "end_date": end_date.strftime("%Y-%m-%d"),
         "daily": ["temperature_2m_max", "temperature_2m_min", "precipitation_sum", "weather_code"],
         "hourly": ["temperature_2m", "precipitation", "wind_speed_10m", "weather_code"],
-        "wind_speed_unit": "ms",  # ← 風速の単位を m/s に指定
+        "wind_speed_unit": "ms",
         "timezone": "Asia/Tokyo"
     }
 
@@ -196,23 +195,52 @@ start_available_date = datetime(2020, 1, 1).date()
 if "selected_date" not in st.session_state:
     st.session_state.selected_date = yesterday
 
-# タイトルと日付選択（カレンダー入力）を横並びにする
-col_title, col_select, _ = st.columns([1.5, 2, 2.5])
+if st.session_state.selected_date > yesterday:
+    st.session_state.selected_date = yesterday
+if st.session_state.selected_date < start_available_date:
+    st.session_state.selected_date = start_available_date
 
-with col_title:
-    st.markdown("## ☀️ お天気日記")
+st.markdown("## ☀️ お天気日記")
 
-with col_select:
-    selected_date_box = st.date_input(
-        "日付選択",
-        value=st.session_state.selected_date,
-        min_value=start_available_date,
-        max_value=yesterday,
-        label_visibility="collapsed"
-    )
+# 年・月・日を独立したセレクトボックスで選択
+col_y, col_m, col_d, _ = st.columns([1.2, 1.2, 1.2, 2.4])
 
-if selected_date_box != st.session_state.selected_date:
-    st.session_state.selected_date = selected_date_box
+with col_y:
+    available_years = list(range(2020, yesterday.year + 1))
+    current_year_idx = available_years.index(st.session_state.selected_date.year) if st.session_state.selected_date.year in available_years else len(available_years) - 1
+    selected_year = st.selectbox("年", available_years, index=current_year_idx, format_func=lambda x: f"{x}年")
+
+with col_m:
+    max_month = yesterday.month if selected_year == yesterday.year else 12
+    min_month = 1
+    available_months = list(range(min_month, max_month + 1))
+    current_month_val = st.session_state.selected_date.month
+    if current_month_val not in available_months:
+        current_month_val = available_months[-1]
+    current_month_idx = available_months.index(current_month_val)
+    selected_month = st.selectbox("月", available_months, index=current_month_idx, format_func=lambda x: f"{x}月")
+
+with col_d:
+    if selected_year == yesterday.year and selected_month == yesterday.month:
+        max_day = yesterday.day
+    else:
+        if selected_month == 12:
+            next_m = datetime(selected_year + 1, 1, 1)
+        else:
+            next_m = datetime(selected_year, selected_month + 1, 1)
+        max_day = (next_m - timedelta(days=1)).day
+    
+    available_days = list(range(1, max_day + 1))
+    current_day_val = st.session_state.selected_date.day
+    if current_day_val not in available_days:
+        current_day_val = available_days[-1]
+    current_day_idx = available_days.index(current_day_val)
+    selected_day = st.selectbox("日", available_days, index=current_day_idx, format_func=lambda x: f"{x}日")
+
+new_selected_date = datetime(selected_year, selected_month, selected_day).date()
+
+if new_selected_date != st.session_state.selected_date:
+    st.session_state.selected_date = new_selected_date
     st.rerun()
 
 # 選択された日付から年と月を決定
@@ -231,7 +259,7 @@ if df_daily is not None and not df_daily.empty:
     st.markdown("---")
     
     # 年月日の直下にタブを配置
-    tab_calendar, tab_hourly = st.tabs([f" 　 🗓 {selected_month}月カレンダー　  ", " 　 🕒 1時間別の詳細 　 "])
+    tab_calendar, tab_hourly = st.tabs([f"   🗓 {selected_month}月カレンダー   ", "   🕒 1時間別の詳細   "])
     
     days_of_week = ["日", "月", "火", "水", "木", "金", "土"]
     
@@ -295,7 +323,6 @@ if df_daily is not None and not df_daily.empty:
             border_style = "2px solid #007bff" if st.session_state.selected_date == current_date else "1px solid #ced4da"
             bg_color = "#f0f8ff" if st.session_state.selected_date == current_date else "#ffffff"
 
-            # 各カードに一意のIDを付与
             card_id = f"day-{current_date.strftime('%Y%m%d')}"
 
             daily_cards += f"""

@@ -24,6 +24,12 @@ st.markdown("""
         footer {visibility: hidden;}
         header {visibility: hidden;}
         
+        * --- 追加：右下のStreamlitバッジやステータスウィジェットを非表示にする --- */
+        .stDeployButton {display: none;}
+        [data-testid="stStatusWidget"] {visibility: hidden;}
+        footer {visibility: hidden !important;}
+        #is-managed-hosting-badge {display: none !important;}
+        
         /* Streamlitのデフォルト上部余白を削減 */
         .block-container {
             padding-top: 1.5rem !important;

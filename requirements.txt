@@ -1,0 +1,8 @@
+streamlit
+holidays
+geopy
+openmeteo-requests
+pandas
+requests-cache
+retry-requests
+python-dotenv

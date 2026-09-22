@@ -202,13 +202,13 @@ if st.session_state.selected_date < start_available_date:
 
 st.markdown("## ☀️ お天気日記")
 
-# 年・月・日を独立したセレクトボックスで選択
-col_y, col_m, col_d, _ = st.columns([1.2, 1.2, 1.2, 2.4])
+# 年・月・日のプルダウンをコンパクトに配置（ラベル非表示）
+col_y, col_m, col_d, _ = st.columns([1.0, 1.0, 1.0, 3.0])
 
 with col_y:
     available_years = list(range(2020, yesterday.year + 1))
     current_year_idx = available_years.index(st.session_state.selected_date.year) if st.session_state.selected_date.year in available_years else len(available_years) - 1
-    selected_year = st.selectbox("年", available_years, index=current_year_idx, format_func=lambda x: f"{x}年")
+    selected_year = st.selectbox("年", available_years, index=current_year_idx, format_func=lambda x: f"{x}年", label_visibility="collapsed")
 
 with col_m:
     max_month = yesterday.month if selected_year == yesterday.year else 12
@@ -218,7 +218,7 @@ with col_m:
     if current_month_val not in available_months:
         current_month_val = available_months[-1]
     current_month_idx = available_months.index(current_month_val)
-    selected_month = st.selectbox("月", available_months, index=current_month_idx, format_func=lambda x: f"{x}月")
+    selected_month = st.selectbox("月", available_months, index=current_month_idx, format_func=lambda x: f"{x}月", label_visibility="collapsed")
 
 with col_d:
     if selected_year == yesterday.year and selected_month == yesterday.month:
@@ -235,7 +235,7 @@ with col_d:
     if current_day_val not in available_days:
         current_day_val = available_days[-1]
     current_day_idx = available_days.index(current_day_val)
-    selected_day = st.selectbox("日", available_days, index=current_day_idx, format_func=lambda x: f"{x}日")
+    selected_day = st.selectbox("日", available_days, index=current_day_idx, format_func=lambda x: f"{x}日", label_visibility="collapsed")
 
 new_selected_date = datetime(selected_year, selected_month, selected_day).date()
 

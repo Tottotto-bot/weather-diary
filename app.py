@@ -219,7 +219,7 @@ if selected_date_box != st.session_state.selected_date:
 selected_year = st.session_state.selected_date.year
 selected_month = st.session_state.selected_date.month
 
-target_location = os.getenv("LOCATION", "長崎県西彼杵郡長与町")
+target_location = os.getenv("LOCATION", "32.819234, 129.879768")
 lat, lon = get_lat_lon(target_location)
 
 # データのロード

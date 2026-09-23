@@ -129,7 +129,8 @@ def fetch_month_weather(lat, lon, year, month):
     if start_date > end_date:
         return None, None
 
-    cache_session = requests_cache.CachedSession(".cache", expire_after=3600)
+    # キャッシュの有効期限を短めにし、アクセス時に最新データを取得しやすくする
+    cache_session = requests_cache.CachedSession(".cache", expire_after=1800)
     retry_session = retry(cache_session, retries=3, backoff_factor=0.2)
     openmeteo = openmeteo_requests.Client(session=retry_session)
 
@@ -250,7 +251,7 @@ selected_month = st.session_state.selected_date.month
 target_location = os.getenv("LOCATION", "32.819234, 129.879768")
 lat, lon = get_lat_lon(target_location)
 
-# データのロード
+# データのロード（サイトアクセス時に最新の天気データを反映）
 df_daily, df_hourly = fetch_month_weather(lat, lon, selected_year, selected_month)
 
 if df_daily is not None and not df_daily.empty:
@@ -345,18 +346,23 @@ if df_daily is not None and not df_daily.empty:
 
         selected_id = f"day-{st.session_state.selected_date.strftime('%Y%m%d')}"
 
+        # 描画完了後に確実にスクロールさせるためのJS処理（タイムアウトを挟んで確実性を向上）
         calendar_html = f"""
         <div id="calendar-container" style="display: flex; flex-direction: column; max-height: 550px; overflow-y: auto; padding: 4px;">
             {daily_cards}
         </div>
         <script>
-            window.addEventListener('DOMContentLoaded', () => {{
+            function scrollToSelected() {{
                 const el = document.getElementById("{selected_id}");
                 const container = document.getElementById("calendar-container");
                 if (el && container) {{
                     container.scrollTop = el.offsetTop - container.offsetTop;
                 }}
+            }}
+            window.addEventListener('load', () => {{
+                setTimeout(scrollToSelected, 100);
             }});
+            setTimeout(scrollToSelected, 300);
         </script>
         """
         components.html(calendar_html, height=580)
